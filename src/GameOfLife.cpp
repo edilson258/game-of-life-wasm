@@ -70,7 +70,6 @@ int GameOfLife::Run()
 
 #ifdef __EMSCRIPTEN__
     g_Game = this;
-    // 0 = use requestAnimationFrame, 1 = simulate infinite loop
     emscripten_set_main_loop(emMainLoop, 10, 1);
 #else
     m_Board.dump();
@@ -106,8 +105,6 @@ int GameOfLife::CreateSDLWindow()
         return -1;
     }
 
-    fprintf(stdout, "[DEBUG]: SDL Window created successfully!\n");
-
     return 0;
 }
 
@@ -123,8 +120,6 @@ int GameOfLife::CreateSDLRenderer()
                 SDL_GetError());
         return -1;
     }
-
-    fprintf(stdout, "[DEBUG]: Created SDL renderer successfully!\n");
 
     return 0;
 }

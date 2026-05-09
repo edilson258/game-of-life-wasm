@@ -80,7 +80,6 @@ void GameOfLifeBoard::resize(int newCols, int newRows)
     newCols = std::min(newCols, MAX_COLS);
     newRows = std::min(newRows, MAX_ROWS);
 
-    // Clear next buffer, copy intersection via memcpy per row, swap
     memset(m_Next, 0, PADDED_SIZE);
 
     int cpRows = std::min(m_Rows, newRows);
@@ -104,10 +103,6 @@ void GameOfLifeBoard::resize(int newCols, int newRows)
 
 void GameOfLifeBoard::computeNextGen()
 {
-    // Padding border is always 0 → NO bounds checking needed
-    // Neighbor sum is fully unrolled → no loop overhead
-    // Branchless GoL rule via bitwise ops → no branch misprediction
-
     for (int r = 0; r < m_Rows; r++)
     {
         const int rowOff = (r + 1) * STRIDE;
@@ -116,23 +111,17 @@ void GameOfLifeBoard::computeNextGen()
         {
             const int i = rowOff + (c + 1);
 
-            // Unrolled 8-neighbor sum — direct memory access, no function call
             const int alive = m_Current[i - STRIDE - 1] +
                               m_Current[i - STRIDE] +
                               m_Current[i - STRIDE + 1] + m_Current[i - 1] +
                               m_Current[i + 1] + m_Current[i + STRIDE - 1] +
                               m_Current[i + STRIDE] + m_Current[i + STRIDE + 1];
 
-            // Branchless Conway's rules:
-            //   alive==3 → birth or survive
-            //   alive==2 && cell → survive
-            //   else → death
             m_Next[i] = static_cast<uint8_t>((alive == 3) |
                                              ((alive == 2) & m_Current[i]));
         }
     }
 
-    // Pointer swap — zero-cost buffer exchange, no copies
     uint8_t* tmp = m_Current;
     m_Current    = m_Next;
     m_Next       = tmp;
@@ -143,19 +132,14 @@ void GameOfLifeBoard::sprinkle(int count)
     static std::random_device rd;
     static std::mt19937       gen(rd());
 
-    // Small viable patterns that survive and propagate
-    // Each pattern is a list of {dc, dr} offsets from a center cell
     static constexpr int PATTERN_COUNT = 3;
 
-    // R-pentomino (chaotic, long-lived)
     static constexpr int rpento[][2] = {
         { 0, -1 }, { 1, -1 }, { -1, 0 }, { 0, 0 }, { 0, 1 }
     };
-    // Glider (moves across the board)
     static constexpr int glider[][2] = {
         { 1, -1 }, { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 }
     };
-    // Blinker (simple oscillator)
     static constexpr int blinker[][2] = { { -1, 0 }, { 0, 0 }, { 1, 0 } };
 
     static constexpr int patternSizes[PATTERN_COUNT] = { 5, 5, 3 };

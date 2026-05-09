@@ -1,24 +1,24 @@
-# 🧬 Game of Life
+# Game of Life
 
 A high-performance implementation of [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) in **C++20** with **SDL2** rendering. Compiles natively and to **WebAssembly** for the browser.
 
-## ✨ Features
+## Features
 
-- **Zero runtime allocations** — fixed-size padded buffers with pointer-swap double buffering
-- **Branchless GoL rules** — bitwise Conway's logic, no branch misprediction
-- **Unrolled neighbor sum** — 8 direct memory reads, no loop overhead
-- **Padded border** — eliminates all bounds checking in the hot path
-- **Batched rendering** — single `SDL_RenderFillRects` call per frame
-- **Click to create cells** — left-click anywhere on the grid
-- **Auto-sprinkle** — randomly injects gliders, R-pentominoes, and blinkers to keep the simulation alive
-- **WebAssembly** — runs in the browser via Emscripten
+- Zero runtime allocations with fixed-size padded buffers and pointer-swap double buffering
+- Branchless Conway's rules via bitwise operations
+- Fully unrolled 8-neighbor sum with direct memory access
+- Padded border eliminates all bounds checking in the hot path
+- Batched `SDL_RenderFillRects` rendering (single draw call per frame)
+- Click to create cells
+- Auto-sprinkle of gliders, R-pentominoes, and blinkers
+- WebAssembly support via Emscripten
 
-## 🛠️ Build
+## Build
 
 ### Prerequisites
 
 - C++20 compiler (GCC / Clang)
-- CMake ≥ 3.20
+- CMake >= 3.20
 - SDL2 (`libsdl2-dev`)
 
 ### Native
@@ -33,52 +33,49 @@ make -j$(nproc)
 ### WebAssembly
 
 ```bash
-# First time: install Emscripten
 git clone https://github.com/emscripten-core/emsdk.git --depth 1
 cd emsdk && ./emsdk install latest && ./emsdk activate latest && cd ..
 
-# Build
 ./build-wasm.sh
 
-# Serve
 cd web && python3 -m http.server 8080
 ```
 
 Open `http://localhost:8080` in your browser.
 
-## 🎮 Controls
+## Controls
 
 | Input | Action |
 |-------|--------|
-| **Left Click** | Set cell alive |
-| **Escape** | Quit (native only) |
-| **Window Resize** | Grid adapts automatically |
+| Left Click | Set cell alive |
+| Escape | Quit (native only) |
+| Window Resize | Grid adapts automatically |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
-├── GameOfLifeBoard.hpp   # Board declarations
-├── GameOfLifeBoard.cpp   # Board logic (state, neighbors, generation)
-├── GameOfLife.hpp         # Game/renderer declarations
-├── GameOfLife.cpp         # SDL rendering, event loop, WASM support
-└── main.cpp              # Entry point
+├── GameOfLifeBoard.hpp
+├── GameOfLifeBoard.cpp
+├── GameOfLife.hpp
+├── GameOfLife.cpp
+└── main.cpp
 web/
-└── index.html            # Browser shell for WASM build
+└── index.html
 ```
 
-## ⚡ Performance Design
+## Performance
 
 | Technique | Detail |
 |-----------|--------|
 | Data layout | Flat `uint8_t` array, cache-line aligned (`alignas(64)`) |
-| Buffering | Double-buffered pointer swap — zero copies per generation |
-| Bounds checking | Eliminated via 1-cell padding border of zeros |
-| Neighbor counting | Fully unrolled 8-neighbor sum, direct memory access |
+| Buffering | Double-buffered pointer swap, zero copies per generation |
+| Bounds checking | Eliminated via 1-cell padding border |
+| Neighbor counting | Fully unrolled 8-neighbor sum |
 | GoL rules | Branchless: `(alive == 3) \| ((alive == 2) & cell)` |
-| Rendering | Batched `SDL_RenderFillRects` — one draw call per frame |
+| Rendering | Batched `SDL_RenderFillRects`, one draw call per frame |
 | Compiler | `-O3 -march=native -flto -funroll-loops` |
 
-## 📄 License
+## License
 
 MIT
